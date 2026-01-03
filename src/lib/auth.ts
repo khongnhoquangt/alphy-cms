@@ -7,7 +7,6 @@ export const AUTH_SECRET_KEY =
   "ea5de630821beca3bb26218880f3152ced26f934ebd0ed998afa0a5eb380c47d";
 
 export function validateKey(inputKey: string): boolean {
-  console.log(inputKey);
   return inputKey === AUTH_SECRET_KEY;
 }
 

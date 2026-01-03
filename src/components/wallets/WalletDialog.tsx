@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api.ts";
 import { GET_WALLET_TRACKING } from "@/query/useGetWalletTracking.ts";
 import { toast } from "sonner";
+import { GET_SUMMARY } from "@/query/useGetSummary.ts";
 
 interface WalletFormData {
   address: string;
@@ -44,10 +45,17 @@ export function WalletDialog({
   editingWallet,
 }: WalletDialogProps) {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<WalletFormData>(() =>
-    getInitialFormData(editingWallet),
-  );
+  const [formData, setFormData] = useState<WalletFormData>({
+    address: "",
+    type: "",
+    pictureUrl: "",
+    description: "",
+    x_url: "",
+  });
 
+  useEffect(() => {
+    setFormData(getInitialFormData(editingWallet));
+  }, [editingWallet]);
   // Reset form when dialog opens/closes or editing wallet changes
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
@@ -73,6 +81,9 @@ export function WalletDialog({
       handleOpenChange(false);
       queryClient.invalidateQueries({
         queryKey: [GET_WALLET_TRACKING],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [GET_SUMMARY],
       });
       toast.success("Wallet added successfully!");
     },

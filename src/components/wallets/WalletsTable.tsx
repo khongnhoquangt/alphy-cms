@@ -13,6 +13,11 @@ import {
 import { User } from "lucide-react";
 import { WalletTypeBadge, type WalletType } from "./WalletTypeBadge";
 import { DataTable } from "@/components/ui/data-table";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/services/api.ts";
+import { GET_WALLET_TRACKING } from "@/query/useGetWalletTracking.ts";
+import { GET_SUMMARY } from "@/query/useGetSummary.ts";
+import { toast } from "sonner";
 
 export interface Wallet {
   id: number;
@@ -27,7 +32,6 @@ export interface Wallet {
 interface WalletsTableProps {
   wallets: Wallet[];
   onEdit: (wallet: Wallet) => void;
-  onDelete?: (wallet: Wallet) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -37,7 +41,6 @@ interface WalletsTableProps {
 export function WalletsTable({
   wallets,
   onEdit,
-  onDelete,
   currentPage,
   totalPages,
   onPageChange,
@@ -69,13 +72,7 @@ export function WalletsTable({
         );
       },
     },
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: ({ row }) => (
-        <span className="font-medium">{row.original.name || "-"}</span>
-      ),
-    },
+
     {
       accessorKey: "address",
       header: "Wallet address",
@@ -113,14 +110,7 @@ export function WalletsTable({
               Edit
             </Button>
             <span className="text-muted-foreground">/</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-600 hover:text-red-700"
-              onClick={() => onDelete?.(wallet)}
-            >
-              Delete
-            </Button>
+            <DeleteButton wallet={wallet} />
           </div>
         );
       },
@@ -283,3 +273,35 @@ export function WalletsTable({
     </Card>
   );
 }
+
+const DeleteButton = ({ wallet }: { wallet: Wallet }) => {
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/user/wallet-tracking/${wallet.address}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [GET_WALLET_TRACKING],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [GET_SUMMARY],
+      });
+      toast.success("Wallet deleted successfully!");
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+  return (
+    <Button
+      onClick={() => mutate()}
+      disabled={isPending}
+      variant="ghost"
+      size="sm"
+      className="text-red-600 hover:text-red-700"
+    >
+      Delete
+    </Button>
+  );
+};

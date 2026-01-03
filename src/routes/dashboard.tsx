@@ -36,11 +36,10 @@ function DashboardPage() {
 
   // Debounce search query by 300ms
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  console.log({ debouncedSearchQuery });
 
   const { data: dataTrading } = useGetWalletTracking({
     search: debouncedSearchQuery,
-    page: currentPage,
+    page: currentPage - 1,
     limit: 10,
   });
 
